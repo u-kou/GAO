@@ -1,0 +1,166 @@
+Connecting to vehicle on: tcp:127.0.0.1:5760
+Basic pre-arm checks
+Arming motors
+Taking off!
+ Altitude:  4.99
+Reached target altitude
+Distance to waypoint (0): None
+Now Location: (0.0, 0.0)
+The remains of waypoints: (3)
+Distance to waypoint (1): 36.7984016691
+Now Location: (-0.0111500701303, -0.0090873094605)
+The remains of waypoints: (2)
+Distance to waypoint (1): 36.7984067204
+Now Location: (-0.0223001402606, -0.0090873094605)
+The remains of waypoints: (2)
+Distance to waypoint (1): 36.5646307311
+Now Location: (-0.0111500701303, 0.181746199541)
+The remains of waypoints: (2)
+Distance to waypoint (1): 35.7409080778
+Now Location: (0.0557503498592, 0.85420713836)
+The remains of waypoints: (2)
+Distance to waypoint (1): 34.9506398838
+Now Location: (0.100350629588, 1.4994061488)
+The remains of waypoints: (2)
+Distance to waypoint (1): 33.9600154656
+Now Location: (0.133800839979, 2.30817673985)
+The remains of waypoints: (2)
+Distance to waypoint (1): 32.7467959103
+Now Location: (0.167251049578, 3.29869353045)
+The remains of waypoints: (2)
+Distance to waypoint (1): 31.2998580721
+Now Location: (0.200701259969, 4.48004383005)
+The remains of waypoints: (2)
+Distance to waypoint (1): 29.6744865188
+Now Location: (0.178401119708, 5.80679108877)
+The remains of waypoints: (2)
+Distance to waypoint (1): 27.9041140484
+Now Location: (0.0892005602501, 7.25167337822)
+The remains of waypoints: (2)
+Distance to waypoint (1): 25.0208191724
+Now Location: (-0.0334502103909, 9.60528667054)
+The remains of waypoints: (2)
+Distance to waypoint (1): 22.9392545875
+Now Location: (-0.0780504901198, 11.3046136404)
+The remains of waypoints: (2)
+Distance to waypoint (1): 20.7464894601
+Now Location: (-0.122650769849, 13.09481371)
+The remains of waypoints: (2)
+Distance to waypoint (1): 18.4425703683
+Now Location: (-0.16725105037, 14.9758868794)
+The remains of waypoints: (2)
+Distance to waypoint (1): 17.2628650518
+Now Location: (-0.189551189838, 15.939141739)
+The remains of waypoints: (2)
+Distance to waypoint (2): 33.1165257013
+Now Location: (-0.200701259969, 18.9379540392)
+The remains of waypoints: (1)
+Remained HoverTime:4.0
+Remained HoverTime:3.0
+Remained HoverTime:2.0
+Remained HoverTime:1.0
+Distance to waypoint (2): 29.3955012684
+Now Location: (0.613253850036, 29.4792336384)
+The remains of waypoints: (1)
+Distance to waypoint (2): 28.9887554351
+Now Location: (1.0258064401, 29.3247493698)
+The remains of waypoints: (1)
+Distance to waypoint (2): 28.4130059435
+Now Location: (1.60561007975, 29.252050889)
+The remains of waypoints: (1)
+Distance to waypoint (2): 27.7132673038
+Now Location: (2.30806449004, 29.2247889606)
+The remains of waypoints: (1)
+Distance to waypoint (2): 26.835668331
+Now Location: (3.18892002003, 29.1975270296)
+The remains of waypoints: (1)
+Distance to waypoint (2): 25.7691498283
+Now Location: (4.25932673986, 29.1702650987)
+The remains of waypoints: (1)
+Distance to waypoint (2): 24.5350694619
+Now Location: (5.49698451007, 29.1611777892)
+The remains of waypoints: (1)
+Distance to waypoint (2): 23.1672059932
+Now Location: (6.86844312025, 29.1611777892)
+The remains of waypoints: (1)
+Distance to waypoint (2): 20.9311806886
+Now Location: (9.1096071895, 29.1793524107)
+The remains of waypoints: (1)
+Distance to waypoint (2): 19.3285621266
+Now Location: (10.71521727, 29.2066143391)
+The remains of waypoints: (1)
+Distance to waypoint (2): 17.614925967
+Now Location: (12.4323280495, 29.2338762701)
+The remains of waypoints: (1)
+Distance to waypoint (2): 15.8126092385
+Now Location: (14.23863939, 29.2611381984)
+The remains of waypoints: (1)
+Distance to waypoint (2): 13.9432731383
+Now Location: (16.1118511497, 29.2974874389)
+The remains of waypoints: (1)
+Distance to waypoint (3): 40.2003213868
+Now Location: (18.0742634697, 29.3247493698)
+The remains of waypoints: (0)
+Remained HoverTime:4.0
+Remained HoverTime:3.0
+Remained HoverTime:2.0
+Remained HoverTime:1.0
+Distance to waypoint (3): 46.6372709783
+Now Location: (30.5288916602, 28.815860009)
+The remains of waypoints: (0)
+Distance to waypoint (3): 45.9197795039
+Now Location: (29.9713881601, 28.4341929885)
+The remains of waypoints: (0)
+Distance to waypoint (3): 45.0165955436
+Now Location: (29.3358341698, 27.9071290088)
+The remains of waypoints: (0)
+Distance to waypoint (3): 43.9456282131
+Now Location: (28.61107962, 27.2619299983)
+The remains of waypoints: (0)
+Distance to waypoint (3): 41.9667029658
+Now Location: (27.2953713597, 26.0533177703)
+The remains of waypoints: (0)
+Distance to waypoint (3): 40.4513941142
+Now Location: (26.30301513, 25.1173248391)
+The remains of waypoints: (0)
+Distance to waypoint (3): 38.817762493
+Now Location: (25.2326084101, 24.1086334296)
+The remains of waypoints: (0)
+Distance to waypoint (3): 37.0887256242
+Now Location: (24.1064513397, 23.0363308487)
+The remains of waypoints: (0)
+Distance to waypoint (3): 35.2558135928
+Now Location: (22.9245439201, 21.8913297895)
+The remains of waypoints: (0)
+Distance to waypoint (3): 33.3359695041
+Now Location: (21.6868861499, 20.6918048684)
+The remains of waypoints: (0)
+Distance to waypoint (3): 31.320735903
+Now Location: (20.3934780298, 19.4286687785)
+The remains of waypoints: (0)
+Distance to waypoint (3): 29.2101349829
+Now Location: (19.0443195599, 18.1019215198)
+The remains of waypoints: (0)
+Distance to waypoint (3): 27.0367841496
+Now Location: (17.6505608095, 16.7388250206)
+The remains of waypoints: (0)
+Distance to waypoint (3): 24.7934118153
+Now Location: (16.20105171, 15.3393792785)
+The remains of waypoints: (0)
+Distance to waypoint (3): 22.4872581551
+Now Location: (14.7069423299, 13.9035842985)
+The remains of waypoints: (0)
+Distance to waypoint (3): 20.1255927626
+Now Location: (13.1793827395, 12.4314400806)
+The remains of waypoints: (0)
+Distance to waypoint (3): 16.5251088781
+Now Location: (10.8378680399, 10.1959618191)
+The remains of waypoints: (0)
+Distance to waypoint (4): 14.1018082117
+Now Location: (9.25455809961, 8.69655567026)
+The remains of waypoints: (-1)
+Remained HoverTime:4.0
+Remained HoverTime:3.0
+Remained HoverTime:2.0
+Remained HoverTime:1.0
+DCP finished

@@ -1,0 +1,129 @@
+package forwarder;
+
+import strategy.MessageStrategy;
+import strategy.NeighborStrategy;
+import manager.BufferManager;
+import manager.ConnectionManager;
+import manager.InfoManager;
+import ndn.nfd.forwarder.NFD;
+import node.RMICNNode;
+import datastructure.BufferStore;
+import datastructure.FaceTable;
+
+/**
+ * RMICN Node 用 NFD
+ * @author taku
+ *
+ */
+public class RMICNFD extends NFD {
+
+	// My data structure
+	protected FaceTable ft;
+	protected BufferStore bs;
+
+	// My managers
+	protected InfoManager infoManager;
+	protected BufferManager bufferManager;
+	protected ConnectionManager connectionManager;
+
+	
+
+	
+	
+	public static final int NOTSendInterest = 0;
+	public static final int NOTReceiveData = 1;
+	public static final int ReceivedData= 2;
+	protected int StatusRetrieveInfo = NOTSendInterest;
+	protected int StatusCrawl = NOTSendInterest;
+	
+	
+	public int CrawlRemainTime;
+	
+	
+	// 継承用コンストラクタ
+	public RMICNFD(RMICNNode node, boolean extended) {
+		super(node, true);
+		this.bs = new BufferStore();
+		this.ft = new FaceTable();
+		// Connection Manager は最初にインスタンス化する
+		//（他のマネージャによりイベントリスナが登録されるため）
+		this.connectionManager = new ConnectionManager(this);
+		// Buffer Manager
+		this.bufferManager = new BufferManager(this);
+		// Strategy 登録
+		MessageStrategy messageStrategy = new MessageStrategy(this.forwarding);
+		NeighborStrategy neighborStrategy = new NeighborStrategy(this.forwarding);
+		this.scManager.insert(MessageStrategy.prefix, messageStrategy);
+		this.scManager.insert(NeighborStrategy.prefix, neighborStrategy);
+		
+		
+	}
+
+	public RMICNFD(RMICNNode node) {
+		this(node, false);
+		this.infoManager = new InfoManager(this);
+	}
+	
+	public FaceTable getFaceTable() {
+		return ft;
+	}
+
+	public void setFaceTable(FaceTable ft) {
+		this.ft = ft;
+	}
+
+	public BufferStore getBufferStore() {
+		return bs;
+	}
+
+	public void setBufferStore(BufferStore bs) {
+		this.bs = bs;
+	}
+
+	public RMICNNode getNode() {
+		return (RMICNNode) node;
+	}
+	
+	public InfoManager getInfoManager() {
+		return infoManager;
+	}
+
+	public void setInfoManager(InfoManager infoManager) {
+		this.infoManager = infoManager;
+	}
+
+	public BufferManager getBufferManager() {
+		return bufferManager;
+	}
+
+	public void setBufferManager(BufferManager bufferManager) {
+		this.bufferManager = bufferManager;
+	}
+
+	public ConnectionManager getConnectionManager() {
+		return connectionManager;
+	}
+
+	public void setConnectionManager(ConnectionManager connectionManager) {
+		this.connectionManager = connectionManager;
+	}
+	
+	
+	
+	public int getStatusRetrieveInfo(){
+		return StatusRetrieveInfo;
+	}
+	
+	public void setStatusRetrieveInfo(int r){
+		StatusRetrieveInfo = r;
+	}
+	
+	public int getStatusCrawl(){
+		return StatusCrawl;
+	}
+	
+	public void setStatusCrawl(int r){
+		StatusCrawl = r;
+	}
+
+}

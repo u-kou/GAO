@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+  echo "指定された引数は$#個です。" 1>&2
+  echo "実行するには1個の引数が必要です。" 1>&2
+	echo "1st argument: FR (network address 8bit)"
+  exit 1
+fi
+
+nfd-start
+sleep 1s
+nfdc face create udp://192.168.10.$1
+sleep 1s
+nfdc route add /Neighbor/FR0 udp://192.168.10.$1
+sleep 1s
+nfdc route add /FRControl/FR0 udp://192.168.10.$1
+sleep 1s
+java -cp ./bin:./lib/junit-4.11.jar:./lib/protobuf-java-2.6.1.jar:./lib/jackson-core-2.8.1.jar:./lib/jackson-databind-2.8.5.jar:./lib/jackson-annotations-2.8.0.jar main.Main 

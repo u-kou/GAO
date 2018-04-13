@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="net/named_data/jndn/encrypt/AndroidSqlite3ConsumerDb.java|net/named_data/jndn/encrypt/AndroidSqlite3GroupManagerDb.java|net/named_data/jndn/encrypt/AndroidSqlite3ProducerDb.java|net/named_data/jndn/security/identity/AndroidSqlite3IdentityStorage.java|net/named_data/jndn/tests/integration_tests/|test/PingClientNode.java|test/PingServerNode.java|test/PingTest.java" kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.8.0.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.8.5.jar"/>
+	<classpathentry kind="lib" path="lib/protobuf-java-2.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="lib/jndn-0.15.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

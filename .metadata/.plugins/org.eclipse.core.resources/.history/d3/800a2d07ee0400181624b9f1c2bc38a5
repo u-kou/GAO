@@ -1,0 +1,183 @@
+package manager;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+import environment.ParamConfiguration;
+//import environment.RMICNEnvironment;
+import forwarder.FlyingRouterNFD;
+import node.Location;
+
+/**
+ * Movement Manager
+ * 
+ * @author taku
+ *
+ */
+public class MovementManager extends MyManager {
+
+	private float speed;
+	private float timeUnit;
+	protected boolean isMoving;
+	protected boolean isStopping;
+	private ArrivedListener listener;
+
+	public MovementManager(FlyingRouterNFD nfd) {
+		super(nfd);
+		this.speed = ParamConfiguration.droneSpeed;
+		this.timeUnit = ParamConfiguration.movingUnit;
+		this.isMoving = false;
+		this.isStopping = false;
+		this.listener = null;
+	}
+
+	public FlyingRouterNFD getNFD() {
+		return (FlyingRouterNFD) super.getNFD();
+	}
+
+	public void setNFD(FlyingRouterNFD nfd) {
+		super.setNFD(nfd);
+	}
+
+	public void moveTo(String goalNodeName) {
+		if (isMoving)
+			return;
+		Location goalLocation = this.getNFD().getInfoManager().getNodeLocation(goalNodeName);
+		if (goalLocation != null) {
+			Thread t = new Thread(new DroneMovement(goalNodeName, goalLocation));
+			t.start();
+		}
+	}
+
+	public void moveTo(Location goalLocation) {
+		if (isMoving)
+			return;
+		Thread t = new Thread(new DroneMovement(null, goalLocation));
+		t.start();
+	}
+
+	public void moveToDepot() {
+		moveTo(this.getNFD().getInfoManager().getDepotRouterName());
+	}
+
+	public void stop() {
+		this.isStopping = true;
+	}
+
+	public void resume() {
+		this.isStopping = false;
+	}
+
+	public void onArrived() {
+		if (listener != null)
+			listener.onArrived();
+	}
+
+	class DroneMovement implements Runnable {
+
+		private Location goalLocation;
+		private String goalNodeName;
+
+		public DroneMovement(String goalNodeName, Location goalLocation) {
+			this.goalNodeName = goalNodeName;
+			this.goalLocation = goalLocation;
+		}
+
+		@Override
+		public void run() {
+			try {
+				isMoving = true;
+				Location nowLocation = MovementManager.this.getNFD().getNode().getNowLocation();
+				float d = Location.calculateDistance(nowLocation, goalLocation);
+				float t = d / speed;
+				float dvx = (goalLocation.x - nowLocation.x) / t * timeUnit;
+				float dvy = (goalLocation.y - nowLocation.y) / t * timeUnit;
+				int tms = (int) (t * 1000);
+				int timeUnitms = (int) (timeUnit * 1000);
+				String FRname = MovementManager.this.getNFD().getNode().getName();
+
+				// RMICNEnvironment env =
+				// MovementManager.this.getNFD().getNode().getEnvironment();
+
+				// 移動。0.5秒毎に FR の座標更新。
+
+				File file = new File(ParamConfiguration.NowLocationFileAddress);
+				try {
+					Scanner scan = new Scanner(file);
+
+					while (true) {
+						while (isStopping) {
+							Thread.sleep(50);
+						}
+						/*
+						 * if (tms > timeUnitms) { Thread.sleep(timeUnitms);
+						 * nowLocation.setLocation(nowLocation.x + dvx, nowLocation.y + dvy); //
+						 * env.onNodeMoved(); tms -= timeUnitms; System.out.println(FRname + ":" + "(" +
+						 * nowLocation.x + "," + nowLocation.y + ")" ); } else { Thread.sleep(tms);
+						 * nowLocation.setLocation(goalLocation.x, goalLocation.y); //
+						 * env.onNodeMoved(); System.out.println(FRname + ":" + "(" + nowLocation.x +
+						 * "," + nowLocation.y + ")" ); break; }
+						 */
+						if (d > ParamConfiguration.commRange) {
+							Thread.sleep(timeUnitms * 5);
+
+							// read nowLocation from file
+
+							String line = scan.next();
+							if (line.isEmpty())
+								continue;
+
+							String[] s = line.split("/");
+							nowLocation.x = Float.parseFloat(s[1]);
+							nowLocation.y = Float.parseFloat(s[2]);
+
+							if (line != null) {
+								System.out.println(FRname + ":" + "(" + nowLocation.x + "," + nowLocation.y + ")");
+								d = Location.calculateDistance(nowLocation, goalLocation);
+							}
+
+						} else break;
+					}
+					scan.close();
+				} catch (FileNotFoundException e) {
+					System.out.println(e);
+				}
+
+				isMoving = false;
+				System.out.println(FRname + ":" + "arrived at " + goalNodeName);
+				// 目的地に到着したらトリガを呼ぶ
+
+				onArrived();
+
+			} catch (
+
+			InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+	}
+
+	public float getSpeed() {
+		return speed;
+	}
+
+	public void setNowSpeed(float speed) {
+		this.speed = speed;
+	}
+
+	public boolean isMoving() {
+		return isMoving;
+	}
+
+	public void setMoving(boolean isMoving) {
+		this.isMoving = isMoving;
+	}
+
+	public void setArrivedListener(ArrivedListener listener) {
+		this.listener = listener;
+	}
+
+}

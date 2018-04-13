@@ -1,0 +1,379 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+© Copyright 2015-2016, 3D Robotics.
+mission_basic.py: Example demonstrating basic mission operations including creating, clearing and monitoring missions.
+
+Full documentation is provided at http://python.dronekit.io/examples/mission_basic.html
+"""
+from parse import *
+
+from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
+import time
+import math
+import sys
+from pymavlink import mavutil
+
+
+#Set up option parsing to get connection string
+import argparse  
+parser = argparse.ArgumentParser(description='Demonstrates basic mission operations.')
+parser.add_argument('-c','--connect', 
+                   help="vehicle connection target string. If not specified, SITL automatically started and used. ex. tcp:192.168.10.1:5760")
+parser.add_argument('-f','--function', 
+                   help="name of function. function = FNPathRun|PathPause|PathCancel|SetVehicleSpeed|ReturnToLaunch.")
+parser.add_argument('-s','--speed', 
+                   help="Speed of SetVehicleSpeed().")
+args = parser.parse_args()
+
+connection_string = args.connect
+sitl = None
+
+"""
+if not args.function:
+	print("[DCP]Error:there needs to specify a function for drone.")
+	print("Usage: -f {function}")
+	print("function = FNPathRun|PathPause|PathCancel|SetVehicleSpeed|ReturnToLaunch\n")
+	sys.exit()
+"""
+
+
+#Start SITL if no connection string specified
+if not connection_string:
+    import dronekit_sitl
+    sitl = dronekit_sitl.start_default()
+    connection_string = sitl.connection_string()
+
+
+# Connect to the Vehicle
+print 'Connecting to vehicle on: %s' % connection_string
+vehicle = connect(connection_string, wait_ready=True)
+HomeLocation = vehicle.location.global_frame
+
+
+
+def get_location_metres(original_location, dNorth, dEast):
+    """
+    Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the 
+    specified `original_location`. The returned Location has the same `alt` value
+    as `original_location`.
+
+    The function is useful when you want to move the vehicle around specifying locations relative to 
+    the current vehicle position.
+    The algorithm is relatively accurate over small distances (10m within 1km) except close to the poles.
+    For more information see:
+    http://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
+    """
+    earth_radius=6378137.0 #Radius of "spherical" earth
+    #Coordinate offsets in radians
+    dLat = dNorth/earth_radius
+    dLon = dEast/(earth_radius*math.cos(math.pi*original_location.lat/180))
+
+    #New position in decimal degrees
+    newlat = original_location.lat + (dLat * 180/math.pi)
+    newlon = original_location.lon + (dLon * 180/math.pi)
+    return LocationGlobal(newlat, newlon,original_location.alt)
+
+
+def get_distance_metres(aLocation1, aLocation2):
+    """
+    Returns the ground distance in metres between two LocationGlobal objects.
+
+    This method is an approximation, and will not be accurate over large distances and close to the 
+    earth's poles. It comes from the ArduPilot test code: 
+    https://github.com/diydrones/ardupilot/blob/master/Tools/autotest/common.py
+    """
+    dlat = aLocation2.lat - aLocation1.lat
+    dlong = aLocation2.lon - aLocation1.lon
+    return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
+
+
+def get_distance_metres_LatAndLong(aLocation1, aLocation2):
+    """
+    Returns the ground distance about lat and long in metres between two LocationGlobal objects.
+
+    """
+    dlat = (aLocation2.lat - aLocation1.lat) * 1.115007e5
+    dlong = (aLocation2.lon - aLocation1.lon) * 0.908731e5
+    tuple = (dlat, dlong)
+    return tuple
+
+
+
+def distance_to_current_waypoint():
+    """
+    Gets distance in metres to the current waypoint. 
+    It returns None for the first waypoint (Home location).
+    """
+    nextwaypoint = vehicle.commands.next
+    if nextwaypoint==0:
+        return None
+#make location instance of target waypoint
+    missionitem=vehicle.commands[nextwaypoint-1] #commands are zero indexed
+    lat = missionitem.x
+    lon = missionitem.y
+    alt = missionitem.z
+    targetWaypointLocation = LocationGlobalRelative(lat,lon,alt)
+    distancetopoint = get_distance_metres(vehicle.location.global_frame, targetWaypointLocation)
+    return distancetopoint
+
+
+def download_mission():
+    """
+    Download the current mission from the vehicle.
+    """
+    cmds = vehicle.commands
+    cmds.download()
+    cmds.wait_ready() # wait until download is complete.
+
+
+
+def arm_and_takeoff(aTargetAltitude):
+    """
+    Arms vehicle and fly to aTargetAltitude.
+    """
+
+    print "Basic pre-arm checks"
+    # Don't let the user try to arm until autopilot is ready
+    while not vehicle.is_armable:
+        print " Waiting for vehicle to initialise..."
+        time.sleep(1)
+
+        
+    print "Arming motors"
+    # Copter should arm in GUIDED mode
+    vehicle.mode = VehicleMode("GUIDED")
+    vehicle.armed = True
+
+    while not vehicle.armed:      
+        print " Waiting for arming..."
+        time.sleep(1)
+
+    print "Taking off!"
+    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+
+    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command 
+    #  after Vehicle.simple_takeoff will execute immediately).
+    while True:
+        print " Altitude: ", vehicle.location.global_relative_frame.alt      
+        if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95: #Trigger just below target alt.
+            print "Reached target altitude"
+            break
+        time.sleep(1)
+
+
+"""
+def PathRun():
+	f = open('/home/u-kou/git/nfd/path.txt', 'r')
+	n_point=0
+
+	cmds = vehicle.commands
+	cmds.clear()
+	cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, 0, 0, 5))
+
+	NowLocation = vehicle.location.global_frame
+	for line in f:
+		if line == '/HOME' :
+			download_mission()
+			point = vehicle.home_location
+			cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point.lat, point.lon, 5))
+			continue;
+		else:
+			t_parse = parse("/{}/{}/{}",line)
+			point = get_location_metres(NowLocation,int(t_parse[0]),int(t_parse[1]))
+			cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point.lat, point.lon, int(t_parse[2])))
+			n_point += 1
+
+	f.close()
+
+	cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point.lat, point.lon, int(t_parse[2])))
+	cmds.upload()
+
+	vehicle.groundspeed=1
+	arm_and_takeoff(5)
+	vehicle.commands.next=0
+	while vehicle.mode != VehicleMode('AUTO'):
+		vehicle.mode=VehicleMode('AUTO')
+		time.sleep(0.5)
+	while True:
+		nextwaypoint=vehicle.commands.next
+		print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
+		print 'The remains of waypoints: (%s)' % (vehicle.commands.count-vehicle.commands.next)
+		if nextwaypoint == (n_point+1):
+			break;
+		
+		if vehicle.mode == VehicleMode('BRAKE') or vehicle.mode == VehicleMode('RTL'):
+			return;
+		time.sleep(1)
+
+	while vehicle.mode != VehicleMode('RTL'):
+		vehicle.mode = VehicleMode('RTL')
+		time.sleep(0.5)
+	
+	print("Return to Launch.") 
+"""
+
+
+
+def FNPathRun():
+	f = open('/home/u-kou/eclipse-workspace/path.txt', 'r')
+	n_point=0
+	HoverTime=5
+	HoverWayPoint=1
+	HoverAltitude = 10
+	HomeLocation = vehicle.location.global_frame
+
+
+	cmds = vehicle.commands
+	cmds.clear()
+
+	cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, 0, 0, 5))
+	#arm_and_takeoff(HoverAltitude)	
+
+
+	NowLocation = vehicle.location.global_frame
+#read the location of waypoint writed in the file
+	for line in f:
+		if line == '/HOME' :
+			download_mission()
+			point = vehicle.home_location
+			cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point.lat, point.lon, 5))
+			continue;
+		else:
+			t_parse = parse("/{}/{}/{}",line)
+			point = get_location_metres(NowLocation,int(t_parse[0]),int(t_parse[1]))
+			cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point.lat, point.lon, int(t_parse[2])))
+			HoverAltitude = int(t_parse[2])
+			n_point += 1
+
+	f.close()
+
+
+#add home waypoint at last of the path
+	cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, HomeLocation.lat, HomeLocation.lon, HoverAltitude))
+	n_point += 1
+#dammy point
+	cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, HomeLocation.lat, HomeLocation.lon, HoverAltitude))
+	cmds.upload()
+
+
+#take off
+	arm_and_takeoff(HoverAltitude)
+	vehicle.commands.next = 0
+
+
+	while True:
+#get the num of the next waypoint
+		while vehicle.mode != VehicleMode('AUTO'):
+			vehicle.mode=VehicleMode('AUTO')
+			time.sleep(0.5)
+
+		nextwaypoint=vehicle.commands.next
+
+#output the distance from current Location to home
+		tuple = get_distance_metres_LatAndLong(HomeLocation, vehicle.location.global_frame)
+		print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
+		print 'Now Location: (%s, %s)' % (tuple[0], tuple[1])
+		print 'The remains of waypoints: (%s)' % (vehicle.commands.count-vehicle.commands.next - 1)
+
+#output to file
+		NowLocationFile = open('/home/u-kou/eclipse-workspace/NowLocation.txt', 'w')		
+		NowLocationFile.write("/" + str(tuple[0]) + "/" + str(tuple[1]))
+		NowLocationFile.close()
+
+		if nextwaypoint > 1 and nextwaypoint > HoverWayPoint :
+			PathPause(HoverTime)
+			HoverWayPoint = nextwaypoint 
+
+#if nextwaypoint is dammypoint, stop moving
+		if nextwaypoint == (n_point+1):
+			vehicle.commands.clear()
+			vehicle.commands.upload()
+			break;
+		
+		if vehicle.mode == VehicleMode('BRAKE') or vehicle.mode == VehicleMode('RTL'):
+			return;
+		time.sleep(0.5)
+
+#	while vehicle.mode != VehicleMode('LAND'):
+#		vehicle.mode = VehicleMode('LAND')
+#		time.sleep(0.5)
+	
+#	print("Return to Launch.") 
+
+
+
+
+
+
+def PathPause(HoverTime):
+	if HoverTime == 0 :
+		if vehicle.mode == VehicleMode('AUTO'):
+			while vehicle.mode != VehicleMode('GUIDED'):
+				vehicle.mode = VehicleMode('GUIDED')
+				time.sleep(0.5)
+			print 'Mission paused.'
+		elif vehicle.mode == VehicleMode('GUIDED') :
+			while vehicle.mode != VehicleMode('AUTO'):		
+				vehicle.mode = VehicleMode('AUTO')
+				time.sleep(0.5)
+			print 'Restart mission.'
+	elif HoverTime > 0 :
+		RemainTime = HoverTime
+		if vehicle.mode == VehicleMode('AUTO'):
+			while RemainTime > 0 :
+				while vehicle.mode != VehicleMode('GUIDED'):
+					vehicle.mode = VehicleMode('GUIDED')
+					RemainTime -= 0.5
+					time.sleep(0.5)
+				while vehicle.mode == VehicleMode('RTL'):
+					vehicle.mode = VehicleMode('GUIDED')
+					RemainTime -= 0.5
+					time.sleep(0.5)
+				if RemainTime <= 0 :
+					break
+
+#output the distance from current Location to home
+				tuple = get_distance_metres_LatAndLong(HomeLocation, vehicle.location.global_frame)
+#output to file
+				NowLocationFile = open('/home/u-kou/eclipse-workspace/NowLocation.txt', 'w')		
+				NowLocationFile.write("/" + str(tuple[0]) + "/" + str(tuple[1]))
+				NowLocationFile.close()
+
+				print("Remained HoverTime:%s" % (RemainTime))
+				RemainTime -= 1
+				time.sleep(1)
+			while vehicle.mode == VehicleMode('GUIDED'):
+				vehicle.mode = VehicleMode('AUTO')
+				time.sleep(0.5)
+					
+	else :
+		print("[FRControl]error: parameter of PathPause() is invalid.")
+
+
+def PathCancel():
+	cmds=vehicle.commands
+	cmds.clear()
+	cmds.upload()
+	while vehicle.mode != VehicleMode('BRAKE') :
+		vehicle.mode = VehicleMode('BRAKE')
+		time.sleep(0.5)
+	print("PathPlan has been cancelled.")
+
+def SetVehicleSpeed():
+	vehicle.groundspeed = int(args.speed)
+	print("[FRControl]SetVehicleSpeed= ",args.speed)
+
+
+def ReturnToLaunch():
+	while vehicle.mode != VehicleMode('RTL') :
+		vehicle.mode = VehicleMode('RTL')
+		time.sleep(0.5)
+	print("Go home and land")
+
+
+
+arm_and_takeoff(5)
+
+
